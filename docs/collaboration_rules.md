@@ -7,8 +7,8 @@
 
 ## 协作角色
 
-- 你：主责 `E4`，并维护 `artifacts/thc/` 这条共享 verifier 主线
-- 文鑫：主责 `E1 / E2 / E5`，优先复用共享层，不复制逻辑
+- John：主责 `E4`，并维护 `artifacts/thc/` 这条共享 verifier 主线
+- Wenxin：主责 `E1 / E2 / E5`，优先复用共享层，不复制逻辑
 - 共享责任：谁改公共入口，谁同步更新实验层 README
 
 ## 文件归属
@@ -19,7 +19,7 @@
 
 ## 结果交付规则
 
-- 每次实验至少交 3 类文件：原始结果表、清洗后的表、1 页以内结果说明
+- 每次实验至少交 3 类文件：原始结果表、清洗后的表、1 页以内结果说明 （提交的comment请用中文）
 - 原始结果优先进 `paper1_veriedge/Ex/logs/`
 - 主稿候选表进 `paper1_veriedge/Ex/tables/`
 - 主稿候选图进 `paper1_veriedge/Ex/figures/`

@@ -189,7 +189,7 @@ veriedge-paper1-collab/
 
 ### Read Order For A New Collaborator
 
-文鑫第一次拿到仓库后，按下面顺序读：
+Wenxin第一次拿到仓库后，按下面顺序读：
 
 1. 根说明：`README.md`
 2. 协作规则：`docs/collaboration_rules.md`
@@ -201,15 +201,15 @@ veriedge-paper1-collab/
 
 ### Branch Ownership
 
-- 你：优先使用 `feat/e4-*`
-- 文鑫：优先使用 `feat/e1-*`、`feat/e2-*`、`feat/e5-*`
+- John：优先使用 `feat/e4-*`
+- Wenxin：优先使用 `feat/e1-*`、`feat/e2-*`、`feat/e5-*`
 - 纯文档调整：`docs/*`
 
 如果改动跨了两个实验，仍然用“主实验”命名分支，不额外发明新的分支体系。
 
 ### First-Time Setup
 
-文鑫第一次本地准备环境时，按自己实验安装依赖：
+Wenxin第一次本地准备环境时，按自己实验安装依赖：
 
 ```bash
 cd /Users/johnlee/repo/VeriEdge/veriedge-paper1-collab
@@ -261,7 +261,7 @@ git checkout -b feat/e2-sample-sweep
 
 ### If Shared Code Changes
 
-如果文鑫修改了共享层，例如：
+如果Wenxin修改了共享层，例如：
 
 - `artifacts/thc/`
 - `artifacts/TSTC/`
@@ -310,4 +310,4 @@ git commit -m "e2: add sample sweep results and wrapper notes"
 
 - `PAPER1_KICKOFF_MANUAL.docx`
 
-如果你只想知道“代码在哪、结果放哪、我应该从哪个入口开始”，看这个 README 就够了。
+如果只想知道“代码在哪、结果放哪、我应该从哪个入口开始”，看这个 README 就够了。
