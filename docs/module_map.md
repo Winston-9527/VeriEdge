@@ -15,11 +15,13 @@
 - `artifacts/thc/src/hetero_qwen_capture.py`
 - `artifacts/thc/src/checkpoint_qwen.py`
 - `artifacts/thc/src/calibrate_delta.py`
+- `artifacts/thc/src/e1_pairwise_report.py`
 
 实验入口：
 
 - `paper1_veriedge/E1/README.md`
 - `paper1_veriedge/E1/run_capture.sh`
+- `paper1_veriedge/E1/export_pairwise.sh`
 
 正式交付位置：
 

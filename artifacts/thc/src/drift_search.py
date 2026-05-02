@@ -41,7 +41,7 @@ def _write_json(path: Path, payload: Dict[str, Any]) -> None:
 
 
 def _default_output_dir() -> Path:
-    stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%d_%H%M%S_%f")
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     return REPO_ROOT / "artifacts/thc/output" / f"{stamp}_drift_search"
 
 

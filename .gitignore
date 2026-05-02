@@ -37,3 +37,17 @@ id_*
 .cache/
 models/
 hf_home/
+workspace/hf-cache/
+workspace/models/
+
+# Raw E1 experiment captures and local scratch configs
+workspace/captures/E1/**
+!workspace/captures/E1/.gitkeep
+workspace/local_smoke*.json
+workspace/mini1_smoke*.json
+
+# Temporary local experiment logs
+paper1_veriedge/E1/logs/table4_final/
+
+# Untracked local reference files
+docs/jrnl (1).pdf

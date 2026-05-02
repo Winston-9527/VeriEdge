@@ -118,7 +118,7 @@ def main() -> None:
     for node in cluster_nodes:
         _ping_node(node)
 
-    timestamp = dt.datetime.now(dt.UTC).strftime("%Y%m%d_%H%M%S_%f")
+    timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     output_dir = (
         Path(args.output_dir).expanduser().resolve()
         if args.output_dir

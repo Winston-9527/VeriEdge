@@ -47,7 +47,7 @@ def main() -> None:
     if not common_prompts:
         raise ValueError("no common prompt ids across capture roots")
 
-    timestamp = dt.datetime.now(dt.UTC).strftime("%Y%m%d_%H%M%S_%f")
+    timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     output_dir = Path(args.output_dir) if args.output_dir else Path("artifacts/thc/output") / f"{timestamp}_delta_calibration"
     output_dir.mkdir(parents=True, exist_ok=True)
 

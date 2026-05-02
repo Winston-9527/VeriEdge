@@ -352,7 +352,7 @@ def main() -> None:
     if calibrate and args.mode != "all":
         raise ValueError("--calibrate-tstc true requires --mode all")
 
-    run_id = dt.datetime.now(dt.UTC).strftime("%Y%m%d_%H%M%S_%f")
+    run_id = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     run_id = f"{run_id}_qwen_{args.mode}_{args.split}"
     output_root_base = Path(args.output_root) if args.output_root else Path(exp_cfg["output_root"])
     output_root = output_root_base / run_id

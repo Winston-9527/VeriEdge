@@ -39,7 +39,7 @@ def main() -> None:
     if not prompts:
         raise ValueError(f"no prompts found for split={args.split}")
 
-    timestamp = dt.datetime.now(dt.UTC).strftime("%Y%m%d_%H%M%S_%f")
+    timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     output_dir = Path(args.output_dir) if args.output_dir else Path(config["experiment"]["output_root"]) / f"{timestamp}_capture_{args.split}"
     export_dir = output_dir / "captures"
     export_dir.mkdir(parents=True, exist_ok=True)

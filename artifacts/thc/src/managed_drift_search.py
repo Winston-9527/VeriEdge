@@ -60,7 +60,7 @@ def _parse_args() -> argparse.Namespace:
 
 
 def _default_output_dir() -> Path:
-    stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%d_%H%M%S_%f")
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     return REPO_ROOT / "artifacts/thc/output" / f"{stamp}_managed_drift_search"
 
 

@@ -318,9 +318,12 @@ class QwenShardRunner:
             position_embeddings = self._position_embeddings(hidden_states, position_ids_t)
 
             for layer in self.layers:
+                # Some transformers/Qwen3 builds do not expose `attention_type` on decoder layers.
+                # In that case, fall back to the standard full-attention mask.
+                attention_type = getattr(layer, "attention_type", "full_attention")
                 hidden_states = layer(
                     hidden_states,
-                    attention_mask=mask_mapping[layer.attention_type],
+                    attention_mask=mask_mapping[attention_type],
                     position_embeddings=position_embeddings,
                     position_ids=position_ids_t,
                     past_key_values=cache,
