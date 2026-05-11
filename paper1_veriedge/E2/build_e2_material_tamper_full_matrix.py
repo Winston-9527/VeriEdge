@@ -38,6 +38,7 @@ NOTE_DIR = E2_DIR / "notes"
 
 TARGET_STAGE = "prefill"
 ATTACK_CHECKPOINT = "C2"
+TAMPER_CFG_PATH = REPO_ROOT / "artifacts" / "thc" / "config" / "e1_real_qwen_tstc_prefill_1x1_40_200.json"
 
 PAIR_MANIFESTS = [
     REPO_ROOT / "paper1_veriedge" / "E1" / "logs" / "t4strict_pair_a_vs_b_40_200" / "exp_e1_20260504_t4strict_pair_a_vs_b_40_200_manifest.json",
@@ -141,6 +142,20 @@ def _selected_hash_cfg(row: Mapping[str, Any], checkpoints: Sequence[str], conte
     active_delta = base_delta if row["tolerance_mode"] == "checkpoint_specific" else scalar._globalize_delta_map(base_delta)
     scaled = scalar._scale_delta_map(active_delta, tolerance_scale)
     return variant, eq._projected_hash_cfg(scaled, variant)
+
+
+def _trial_index_for_prompt(prompt_id: str) -> int:
+    return scalar._trial_index_for_prompt(prompt_id)
+
+
+def _tamper_cfg() -> Dict[str, Any]:
+    cfg = scalar._load_json(TAMPER_CFG_PATH)
+    tamper = dict(cfg.get("tamper", {}))
+    tamper.setdefault("checkpoint", ATTACK_CHECKPOINT)
+    tamper.setdefault("strength", 0.15)
+    tamper.setdefault("relative_to_tensor_std", True)
+    tamper.setdefault("min_std", 1e-6)
+    return tamper
 
 
 def _compute_detect(
@@ -254,6 +269,7 @@ def main() -> None:
     selected_rows_all: List[Dict[str, Any]] = []
     detail_rows: List[Dict[str, Any]] = []
     attack_summary_rows: List[Dict[str, Any]] = []
+    tamper_cfg = _tamper_cfg()
 
     for manifest_path in PAIR_MANIFESTS:
         context = _context_from_manifest(manifest_path)
@@ -280,7 +296,14 @@ def main() -> None:
                 wrong_donor_bundle, _ = _load_bundle(context["right_eval"], wrong_prompt_id)
 
                 attacks = {
-                    "gaussian": inject_tamper(base_bundle, checkpoint=ATTACK_CHECKPOINT, strength=0.15, seed=3007 + idx),
+                    "gaussian": inject_tamper(
+                        base_bundle,
+                        checkpoint=str(tamper_cfg.get("checkpoint", ATTACK_CHECKPOINT)),
+                        strength=float(tamper_cfg.get("strength", 0.15)),
+                        seed=3000 + _trial_index_for_prompt(prompt_id),
+                        relative_to_tensor_std=bool(tamper_cfg.get("relative_to_tensor_std", True)),
+                        min_std=float(tamper_cfg.get("min_std", 1e-6)),
+                    ),
                     "stale_replay": inject_stale_replay(base_bundle, stale_donor_bundle, checkpoint=ATTACK_CHECKPOINT),
                     "wrong_prompt": inject_wrong_prompt_checkpoint(base_bundle, wrong_donor_bundle, checkpoint=ATTACK_CHECKPOINT),
                 }
@@ -384,6 +407,8 @@ def main() -> None:
         "- Attacks: gaussian, stale_replay, wrong_prompt.",
         "- Attack target: right-side stack of each pair, matching pair-specific calibration/tamper root.",
         f"- Attack checkpoint: {ATTACK_CHECKPOINT}",
+        f"- Gaussian tamper config: checkpoint={tamper_cfg.get('checkpoint')}, strength={tamper_cfg.get('strength')}, "
+        f"relative_to_tensor_std={tamper_cfg.get('relative_to_tensor_std')}, min_std={tamper_cfg.get('min_std')}",
         f"- Selected operating points: {selected_csv}",
         f"- Detail CSV: {detail_csv}",
         f"- Attack summary CSV: {summary_csv}",

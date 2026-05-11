@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import statistics
 import sys
 import time
@@ -41,6 +42,14 @@ def _latest_table(root: Path, pattern: str) -> Path:
     if not matches:
         raise FileNotFoundError(f"no files match {pattern} under {root}")
     return matches[-1]
+
+
+def _sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def _read_csv(path: Path) -> List[Dict[str, str]]:
@@ -183,10 +192,17 @@ def _evaluate_honest_homo_if_available(
 def main() -> None:
     TABLE_DIR.mkdir(parents=True, exist_ok=True)
     NOTE_DIR.mkdir(parents=True, exist_ok=True)
+    import argparse
 
-    selected_operating_points = _latest_table(E2_DIR / "tables", "exp_e2_*_material_tamper_full_matrix_selected_operating_points.csv")
-    attack_summary = _latest_table(E2_DIR / "tables", "exp_e2_*_material_tamper_full_matrix_attack_summary.csv")
-    e4_main_table = _latest_table(E4_DIR / "tables", "exp_e4_*_equal_budget_live_ab_main_table.csv")
+    parser = argparse.ArgumentParser(description="Build measured-profile verification profile matrix")
+    parser.add_argument("--selected-operating-points")
+    parser.add_argument("--attack-summary")
+    parser.add_argument("--e4-main-table")
+    args = parser.parse_args()
+
+    selected_operating_points = Path(args.selected_operating_points).resolve() if args.selected_operating_points else _latest_table(E2_DIR / "tables", "exp_e2_*_material_tamper_full_matrix_selected_operating_points.csv")
+    attack_summary = Path(args.attack_summary).resolve() if args.attack_summary else _latest_table(E2_DIR / "tables", "exp_e2_*_material_tamper_full_matrix_attack_summary.csv")
+    e4_main_table = Path(args.e4_main_table).resolve() if args.e4_main_table else _latest_table(E4_DIR / "tables", "exp_e4_*_equal_budget_live_ab_main_table.csv")
 
     selected_rows = _read_csv(selected_operating_points)
     attack_rows = _read_csv(attack_summary)
@@ -312,6 +328,7 @@ def main() -> None:
     output_rows.sort(key=lambda r: (str(r["pair_id"]), str(r["variant"])))
     out_csv = TABLE_DIR / f"{RUN_ID}.csv"
     notes_path = NOTE_DIR / f"{RUN_ID}.md"
+    manifest_path = NOTE_DIR / f"{RUN_ID}_manifest.json"
     _write_csv(
         out_csv,
         output_rows,
@@ -362,6 +379,18 @@ def main() -> None:
     )
 
     feasible_count = sum(int(row["feasible_under_alpha_beta"]) for row in output_rows)
+    manifest = {
+        "run_id": RUN_ID,
+        "inputs": {
+            "selected_operating_points": {"path": str(selected_operating_points), "sha256": _sha256(selected_operating_points)},
+            "attack_summary": {"path": str(attack_summary), "sha256": _sha256(attack_summary)},
+            "e4_main_table": {"path": str(e4_main_table), "sha256": _sha256(e4_main_table)},
+        },
+        "thresholds": {"alpha": ALPHA, "beta": BETA},
+        "output_csv": str(out_csv),
+    }
+    notes_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(__import__("json").dumps(manifest, indent=2), encoding="utf-8")
     lines = [
         f"# {RUN_ID}",
         "",
@@ -369,6 +398,7 @@ def main() -> None:
         f"- Selected operating points source: {selected_operating_points}",
         f"- Material tamper summary source: {attack_summary}",
         f"- Overhead source: {e4_main_table}",
+        f"- Manifest: {manifest_path}",
         "",
         "## Coverage",
         "",
@@ -386,6 +416,7 @@ def main() -> None:
 
     print(out_csv)
     print(notes_path)
+    print(manifest_path)
 
 
 if __name__ == "__main__":

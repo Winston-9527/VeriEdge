@@ -211,9 +211,25 @@ def _measure_variant_scenario(
         }
         verdict_bytes = len(json.dumps(verdict_payload, ensure_ascii=True, sort_keys=True).encode("utf-8"))
         commitment_chain_bytes, commitment_head_bytes = _chain_sizes_generic(candidate_chains)
-        metadata_bytes = _metadata_bytes(validator_meta) + _metadata_bytes(candidate_meta)
-        storage_head_bytes = validator_capture_bytes + candidate_capture_bytes + metadata_bytes + commitment_head_bytes + verdict_bytes
-        storage_full_chain_bytes = validator_capture_bytes + candidate_capture_bytes + metadata_bytes + commitment_chain_bytes + verdict_bytes
+        reference_metadata_bytes = _metadata_bytes(validator_meta)
+        candidate_metadata_bytes = _metadata_bytes(candidate_meta)
+        metadata_bytes = reference_metadata_bytes + candidate_metadata_bytes
+        reference_storage_head_bytes = validator_capture_bytes + reference_metadata_bytes
+        candidate_working_set_head_bytes = candidate_capture_bytes + candidate_metadata_bytes
+        challenge_working_set_head_bytes = (
+            reference_storage_head_bytes
+            + candidate_working_set_head_bytes
+            + commitment_head_bytes
+            + verdict_bytes
+        )
+        challenge_working_set_full_chain_bytes = (
+            reference_storage_head_bytes
+            + candidate_working_set_head_bytes
+            + commitment_chain_bytes
+            + verdict_bytes
+        )
+        challenge_latency_no_commit_ms = validator_load_ms + candidate_load_ms + replay_ms + compare_ms
+        challenge_latency_with_commit_ms = challenge_latency_no_commit_ms + commitment_generation_ms
 
         out_rows.append(
             {
@@ -232,14 +248,17 @@ def _measure_variant_scenario(
                 "metadata_bytes": metadata_bytes,
                 "commitment_head_bytes": commitment_head_bytes,
                 "commitment_chain_bytes": commitment_chain_bytes,
-                "validator_storage_head_bytes": storage_head_bytes,
-                "validator_storage_full_chain_bytes": storage_full_chain_bytes,
+                "reference_storage_head_bytes": reference_storage_head_bytes,
+                "candidate_working_set_head_bytes": candidate_working_set_head_bytes,
+                "challenge_working_set_head_bytes": challenge_working_set_head_bytes,
+                "challenge_working_set_full_chain_bytes": challenge_working_set_full_chain_bytes,
                 "reference_capture_load_ms": round(validator_load_ms, 6),
                 "candidate_capture_load_ms": round(candidate_load_ms, 6),
                 "commitment_generation_ms": round(commitment_generation_ms, 6),
                 "replay_ms": round(replay_ms, 6),
                 "compare_ms": round(compare_ms, 6),
-                "challenge_latency_ms": round(validator_load_ms + candidate_load_ms + replay_ms + compare_ms, 6),
+                "challenge_latency_no_commit_ms": round(challenge_latency_no_commit_ms, 6),
+                "challenge_latency_ms": round(challenge_latency_with_commit_ms, 6),
                 "detected": int(bool(detected)),
                 "first_mismatch_stage": first_stage,
                 "first_mismatch_checkpoint": first_checkpoint,
@@ -275,11 +294,14 @@ def _build_summary(rows: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
                 "reveal_payload_bytes_per_trace": first["reveal_payload_bytes_per_trace"],
                 "mean_commitment_head_bytes": round(_mean([float(row["commitment_head_bytes"]) for row in bucket]), 6),
                 "mean_commitment_chain_bytes": round(_mean([float(row["commitment_chain_bytes"]) for row in bucket]), 6),
-                "mean_validator_storage_head_bytes": round(_mean([float(row["validator_storage_head_bytes"]) for row in bucket]), 6),
-                "mean_validator_storage_full_chain_bytes": round(_mean([float(row["validator_storage_full_chain_bytes"]) for row in bucket]), 6),
+                "mean_reference_storage_head_bytes": round(_mean([float(row["reference_storage_head_bytes"]) for row in bucket]), 6),
+                "mean_candidate_working_set_head_bytes": round(_mean([float(row["candidate_working_set_head_bytes"]) for row in bucket]), 6),
+                "mean_challenge_working_set_head_bytes": round(_mean([float(row["challenge_working_set_head_bytes"]) for row in bucket]), 6),
+                "mean_challenge_working_set_full_chain_bytes": round(_mean([float(row["challenge_working_set_full_chain_bytes"]) for row in bucket]), 6),
                 "mean_commitment_generation_ms": round(_mean([float(row["commitment_generation_ms"]) for row in bucket]), 6),
                 "mean_replay_ms": round(_mean([float(row["replay_ms"]) for row in bucket]), 6),
                 "mean_compare_ms": round(_mean([float(row["compare_ms"]) for row in bucket]), 6),
+                "mean_challenge_latency_no_commit_ms": round(_mean([float(row["challenge_latency_no_commit_ms"]) for row in bucket]), 6),
                 "mean_challenge_latency_ms": round(_mean([float(row["challenge_latency_ms"]) for row in bucket]), 6),
                 "detection_rate": round(_mean([float(row["detected"]) for row in bucket]), 6),
                 "dominant_mismatch_checkpoint": max(
@@ -317,10 +339,13 @@ def _build_main_table(summary_rows: Sequence[Mapping[str, Any]]) -> List[Dict[st
                 "mean_commitment_head_bytes": anchor.get("mean_commitment_head_bytes", ""),
                 "mean_commitment_chain_bytes": anchor.get("mean_commitment_chain_bytes", ""),
                 "honest_homo_detection_rate": homo.get("detection_rate", ""),
+                "honest_homo_challenge_latency_no_commit_ms": homo.get("mean_challenge_latency_no_commit_ms", ""),
                 "honest_homo_challenge_latency_ms": homo.get("mean_challenge_latency_ms", ""),
                 "honest_hetero_detection_rate": hetero.get("detection_rate", ""),
+                "honest_hetero_challenge_latency_no_commit_ms": hetero.get("mean_challenge_latency_no_commit_ms", ""),
                 "honest_hetero_challenge_latency_ms": hetero.get("mean_challenge_latency_ms", ""),
                 "tamper_detection_rate": tamper.get("detection_rate", ""),
+                "tamper_challenge_latency_no_commit_ms": tamper.get("mean_challenge_latency_no_commit_ms", ""),
                 "tamper_challenge_latency_ms": tamper.get("mean_challenge_latency_ms", ""),
             }
         )
@@ -415,13 +440,16 @@ def main() -> None:
         "metadata_bytes",
         "commitment_head_bytes",
         "commitment_chain_bytes",
-        "validator_storage_head_bytes",
-        "validator_storage_full_chain_bytes",
+        "reference_storage_head_bytes",
+        "candidate_working_set_head_bytes",
+        "challenge_working_set_head_bytes",
+        "challenge_working_set_full_chain_bytes",
         "reference_capture_load_ms",
         "candidate_capture_load_ms",
         "commitment_generation_ms",
         "replay_ms",
         "compare_ms",
+        "challenge_latency_no_commit_ms",
         "challenge_latency_ms",
         "detected",
         "first_mismatch_stage",
@@ -441,11 +469,14 @@ def main() -> None:
         "reveal_payload_bytes_per_trace",
         "mean_commitment_head_bytes",
         "mean_commitment_chain_bytes",
-        "mean_validator_storage_head_bytes",
-        "mean_validator_storage_full_chain_bytes",
+        "mean_reference_storage_head_bytes",
+        "mean_candidate_working_set_head_bytes",
+        "mean_challenge_working_set_head_bytes",
+        "mean_challenge_working_set_full_chain_bytes",
         "mean_commitment_generation_ms",
         "mean_replay_ms",
         "mean_compare_ms",
+        "mean_challenge_latency_no_commit_ms",
         "mean_challenge_latency_ms",
         "detection_rate",
         "dominant_mismatch_checkpoint",
@@ -462,10 +493,13 @@ def main() -> None:
         "mean_commitment_head_bytes",
         "mean_commitment_chain_bytes",
         "honest_homo_detection_rate",
+        "honest_homo_challenge_latency_no_commit_ms",
         "honest_homo_challenge_latency_ms",
         "honest_hetero_detection_rate",
+        "honest_hetero_challenge_latency_no_commit_ms",
         "honest_hetero_challenge_latency_ms",
         "tamper_detection_rate",
+        "tamper_challenge_latency_no_commit_ms",
         "tamper_challenge_latency_ms",
     ]
 
@@ -480,6 +514,9 @@ def main() -> None:
         f"- Selected configs source: {selected_summary}",
         "- Context: same live A/B 40-calibration / 200-evaluation captures used by equal-budget E2.",
         "- Commitment bytes count only digest-chain storage; reveal payload bytes count sketch disclosure on challenge path.",
+        "- `challenge_latency_ms` includes capture load + commitment generation + replay + compare.",
+        "- `challenge_latency_no_commit_ms` excludes commitment generation for compatibility with earlier drafts.",
+        "- `reference_storage_head_bytes` is validator-retained reference storage; `candidate_working_set_*` and `challenge_working_set_*` are challenge-path working-set sizes.",
         f"- Detail CSV: {detail_csv}",
         f"- Summary CSV: {summary_csv}",
         f"- Main table CSV: {main_csv}",
@@ -491,8 +528,10 @@ def main() -> None:
     for row in main_rows:
         lines.append(
             f"- {row['variant']}: reveal={row['reveal_payload_bytes_per_trace']} B/trace, "
-            f"hetero latency={row['honest_hetero_challenge_latency_ms']} ms, "
-            f"tamper latency={row['tamper_challenge_latency_ms']} ms, "
+            f"hetero latency={row['honest_hetero_challenge_latency_ms']} ms "
+            f"(no-commit {row['honest_hetero_challenge_latency_no_commit_ms']} ms), "
+            f"tamper latency={row['tamper_challenge_latency_ms']} ms "
+            f"(no-commit {row['tamper_challenge_latency_no_commit_ms']} ms), "
             f"hetero detect rate={row['honest_hetero_detection_rate']}, "
             f"tamper detect rate={row['tamper_detection_rate']}."
         )

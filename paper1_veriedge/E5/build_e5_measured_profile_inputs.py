@@ -17,6 +17,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build measured-profile E5 policy replay inputs")
     parser.add_argument("--output", required=True)
     parser.add_argument("--seed", type=int, default=20260508)
+    parser.add_argument("--profile-matrix")
     return parser.parse_args()
 
 
@@ -32,6 +33,16 @@ def _latest_profile_matrix() -> Path:
     if not matches:
         raise FileNotFoundError(f"no verification profile matrix found under {PROFILE_TABLE_DIR}")
     return matches[-1]
+
+
+def _sha256(path: Path) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def _load_eval_prompts(path: Path) -> List[Dict[str, Any]]:
@@ -350,7 +361,7 @@ def _placements(profile_rows: List[Dict[str, str]], network_profiles: Dict[str, 
 
 def main() -> None:
     args = _parse_args()
-    profile_matrix = _latest_profile_matrix()
+    profile_matrix = Path(args.profile_matrix).resolve() if args.profile_matrix else _latest_profile_matrix()
     profile_rows = _read_csv(profile_matrix)
     prompts = _load_eval_prompts(PROMPT_FILE)
     network_profiles = _network_profiles_from_yaml(REQUESTER_CONFIG)
@@ -362,6 +373,7 @@ def main() -> None:
         "seed": int(args.seed),
         "source": {
             "profile_matrix": str(profile_matrix),
+            "profile_matrix_sha256": _sha256(profile_matrix),
             "prompt_file": str(PROMPT_FILE),
             "requester_config": str(REQUESTER_CONFIG),
         },
