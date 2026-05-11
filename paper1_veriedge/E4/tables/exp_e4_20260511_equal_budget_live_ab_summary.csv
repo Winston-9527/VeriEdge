@@ -1,0 +1,13 @@
+variant,family,scenario,sample_count,tolerance_mode,percentile,tolerance_scale,signature_scalars_per_checkpoint,signature_bytes_per_checkpoint_fp32,reveal_payload_bytes_per_trace,mean_commitment_head_bytes,mean_commitment_chain_bytes,mean_validator_storage_head_bytes,mean_validator_storage_full_chain_bytes,mean_commitment_generation_ms,mean_replay_ms,mean_compare_ms,mean_challenge_latency_ms,detection_rate,dominant_mismatch_checkpoint
+projcos16,projcos,honest_hetero,200,checkpoint_specific,99.0,1.5,256,1024,3072,32.0,96.0,218686.51,218750.51,0.333521,0.307263,0.044033,3.613842,0.12,
+projcos16,projcos,honest_homo,200,checkpoint_specific,99.0,1.5,256,1024,3072,32.0,96.0,218665.77,218729.77,0.3414,0.310436,0.04598,3.649667,0.0,
+projcos16,projcos,tamper,200,checkpoint_specific,99.0,1.5,256,1024,3072,32.0,96.0,218668.77,218732.77,0.313798,0.302477,0.032171,3.489169,1.0,C2
+projcos4,projcos,honest_hetero,200,checkpoint_specific,99.0,1.5,64,256,768,32.0,96.0,218685.21,218749.21,0.191597,0.174745,0.041759,3.369694,0.02,
+projcos4,projcos,honest_homo,200,checkpoint_specific,99.0,1.5,64,256,768,32.0,96.0,218664.77,218728.77,0.204167,0.17791,0.044458,3.459337,0.0,
+projcos4,projcos,tamper,200,checkpoint_specific,99.0,1.5,64,256,768,32.0,96.0,218667.77,218731.77,0.183824,0.175797,0.031693,3.315379,1.0,C2
+scalar16,scalar,honest_hetero,200,global_shared,99.99,1.5,16,64,192,32.0,96.0,218685.6,218749.6,0.109515,0.072396,0.002945,3.455666,0.15,
+scalar16,scalar,honest_homo,200,global_shared,99.99,1.5,16,64,192,32.0,96.0,218664.77,218728.77,0.140478,0.071276,0.002676,3.421969,0.0,
+scalar16,scalar,tamper,200,global_shared,99.99,1.5,16,64,192,32.0,96.0,218667.77,218731.77,0.081689,0.066323,0.002559,3.256636,1.0,C2
+scalar64,scalar,honest_hetero,200,global_shared,99.99,2.0,64,256,768,32.0,96.0,218686.395,218750.395,0.102039,0.073122,0.002887,3.390844,0.415,
+scalar64,scalar,honest_homo,200,global_shared,99.99,2.0,64,256,768,32.0,96.0,218664.77,218728.77,0.109936,0.074021,0.00283,3.425796,0.0,
+scalar64,scalar,tamper,200,global_shared,99.99,2.0,64,256,768,32.0,96.0,218667.77,218731.77,0.083342,0.068568,0.002381,3.242923,1.0,C2
