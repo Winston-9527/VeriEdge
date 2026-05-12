@@ -184,6 +184,7 @@ def _run_policy_for_workload(
     width_sum = 0.0
     false_dispute_risk_sum = 0.0
     unverifiable_count = 0
+    infeasible_count = 0
     high_risk_count = 0
     low_risk_count = 0
     medium_risk_count = 0
@@ -212,6 +213,9 @@ def _run_policy_for_workload(
         last_completion = max(last_completion, completion_s)
 
         risk_class = str(placement["risk_class"])
+        feasible = int(placement["feasible_under_alpha_beta"])
+        if feasible == 0:
+            infeasible_count += 1
         if risk_class == "unverifiable":
             unverifiable_count += 1
         elif risk_class == "high-risk":
@@ -271,6 +275,7 @@ def _run_policy_for_workload(
         "goodput_success_per_s": round(goodput, 6),
         "false_dispute_risk": round(mean_false_dispute_risk, 6),
         "unverifiable_placement_rate": round(unverifiable_count / task_count, 6),
+        "infeasible_under_alpha_beta_rate": round(infeasible_count / task_count, 6),
         "high_risk_placement_rate": round(high_risk_count / task_count, 6),
         "medium_risk_placement_rate": round(medium_risk_count / task_count, 6),
         "low_risk_placement_rate": round(low_risk_count / task_count, 6),
@@ -361,6 +366,7 @@ def main() -> None:
             "goodput_success_per_s",
             "false_dispute_risk",
             "unverifiable_placement_rate",
+            "infeasible_under_alpha_beta_rate",
             "high_risk_placement_rate",
             "medium_risk_placement_rate",
             "low_risk_placement_rate",

@@ -79,7 +79,7 @@ def _plot_policy_compare(rows: Sequence[Dict[str, Any]], workload_id: str, outpu
     latency = [float(row["mean_task_latency_s"]) for row in rows]
     goodput = [float(row["goodput_success_per_s"]) for row in rows]
     false_risk = [float(row["false_dispute_risk"]) for row in rows]
-    unverifiable = [float(row["unverifiable_placement_rate"]) for row in rows]
+    infeasible = [float(row["infeasible_under_alpha_beta_rate"]) for row in rows]
     risk_goodput = [float(row["risk_adjusted_goodput"]) for row in rows]
     workload = [float(row["mean_verifier_workload_ms_per_task"]) for row in rows]
     colors = [POLICY_COLORS.get(str(row["policy"]), "#475569") for row in rows]
@@ -90,7 +90,7 @@ def _plot_policy_compare(rows: Sequence[Dict[str, Any]], workload_id: str, outpu
         (axes[0][1], goodput, "Goodput", "Successful tasks / s", None),
         (axes[0][2], risk_goodput, "Risk-adjusted goodput", "Adjusted successful tasks / s", None),
         (axes[1][0], false_risk, "False dispute risk", "Mean selected FPR", (0.0, max(false_risk + [0.001]) * 1.25)),
-        (axes[1][1], unverifiable, "Unverifiable placements", "Placement rate", (0.0, 1.0)),
+        (axes[1][1], infeasible, "Infeasible placements", "Placement rate", (0.0, 1.0)),
         (axes[1][2], workload, "Verifier workload", "ms / task", None),
     ]
     for ax, values, title, ylabel, ylim in panels:
